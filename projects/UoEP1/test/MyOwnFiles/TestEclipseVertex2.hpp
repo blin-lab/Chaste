@@ -37,9 +37,11 @@ public:
         simulator.SetOutputDirectory("EclipseVertexTriangleBoundary4");
         simulator.SetEndTime(40.0);
 
-        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetSamplingTimestepMultiple(50);
 
-
+        MAKE_PTR(FarhadifarForce<2>, p_force);
+        p_force->SetBoundaryLineTensionParameter(0.1);
+        simulator.AddForce(p_force);
 
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
