@@ -4,4 +4,4 @@ MyOwnFiles/TestEclipseVertex1.hpp
 MyOwnFIles/TestEclipseVertex2.hpp
 MyOwnFiles/TestEclipseVertexTensionModifier.hpp
 MyOwnFiles/TestEclipseVertexTensionModifier.hpp
-
+MyOwnFIles/TestTensionWriter.hpp

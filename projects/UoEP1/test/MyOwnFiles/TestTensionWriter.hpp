@@ -10,11 +10,11 @@
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "CylindricalHoneycombVertexMeshGenerator.hpp"
 #include "VertexBasedCellPopulation.hpp"
-#include "FarhadifarForce.hpp"
+#include "FarhadifarForce2.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 #include "PlaneBoundaryCondition.hpp"
 #include "PlaneBasedCellKiller.hpp"
-#include "CellLineTensionWriter.hpp"
+#include "CellIdWriter.hpp"
 #include "CellAgesWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 
@@ -25,7 +25,7 @@ class TestEclipseVertex2 : public AbstractCellBasedTestSuite
 public:
     void TestMonolayer()
     {
-        HoneycombVertexMeshGenerator generator(8, 8);    // Parameters are: cells across, cells up
+        HoneycombVertexMeshGenerator generator(6, 6);    // Parameters are: cells across, cells up
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
 
         std::vector<CellPtr> cells;
@@ -36,11 +36,11 @@ public:
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        cell_population.AddCellWriter<CellLineTensionWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseVertexTriangleBoundary5");
-        simulator.SetEndTime(50);
+        simulator.SetOutputDirectory("TensionWriter");
+        simulator.SetEndTime(100);
 
         simulator.SetSamplingTimestepMultiple(50);
 

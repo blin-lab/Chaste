@@ -112,6 +112,7 @@ void MutableElement<ELEMENT_DIM, SPACE_DIM>::DeleteNode(const unsigned& rIndex)
 {
     assert(rIndex < this->mNodes.size());
 
+
     // Remove element from the node at this location
     this->mNodes[rIndex]->RemoveElement(this->mIndex);
 

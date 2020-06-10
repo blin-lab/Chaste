@@ -4,6 +4,7 @@
 #include "ChasteSerialization.hpp"
 #include <boost/serialization/base_object.hpp>
 #include "AbstractCellWriter.hpp"
+#include "FarhadifarForce.hpp"
 
 /**
  * A class written using the visitor pattern for writing cell ages to file.
@@ -12,6 +13,9 @@
  * then the writer also specifies the VTK output for each cell, which is stored
  * in the VTK cell data "Ages" by default.
  */
+extern double GetLineTensionParameter;//links to the Farhadifar Force file where this are described.
+extern double GetBoundaryLineTensionParameter; //links to the Farhadifar Force File where it is described.
+
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 class CellLineTensionWriter : public AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>
 {
