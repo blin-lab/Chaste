@@ -1,17 +1,22 @@
+
 #include "CellLineTensionWriter.hpp"
 #include "AbstractCellPopulation.hpp"
-
-using namespace std;
 
 
 
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::CellLineTensionWriter()
-: AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>("celllinetension.dat")
+: AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>("celllinetension.dat"),
+  mAreaElasticityParameter(1.0), // These parameters are Case I in Farhadifar's paper
+  mPerimeterContractilityParameter(0.04),
+  mLineTensionParameter(0.12),
+  mBoundaryLineTensionParameter(0.12) // this parameter as such does not exist in Farhadifar's model.
   {
-    this->mVtkCellDataName = "Tension";
+    this->mVtkCellDataName = "Cell Tension";
   }
+
+
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetCellDataForVtkOutput(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation)
@@ -19,59 +24,125 @@ double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetCellDataForVtkOutput(Ce
 
     int total_tension = 0.0;
 
-    unsigned cell_index = pCellPopulation->GetLocationIndexUsingCell();
-    std::set<unsigned> node_indices = pCellPopulation->GetNeighbouringNodeIndices(cell_index);
+    VertexBasedCellPopulation<SPACE_DIM>* p_cell_population = static_cast<VertexBasedCellPopulation<SPACE_DIM>*>(pCellPopulation);
 
-    for (std::set<unsigned>::iterator iter = node_indices.begin();
-         iter != node_indices.end();
-         ++iter)
+
+    VertexElement<SPACE_DIM, SPACE_DIM>* cell_element = p_cell_population->GetElementCorrespondingToCell(pCell);
+
+
+    c_vector<double, SPACE_DIM> line_tension_contribution = zero_vector<double>(SPACE_DIM);
+
+    unsigned cell_index = pCellPopulation->GetLocationIndexUsingCell(cell_element);
+    std::set<unsigned> node_index = pCellPopulation->GetNode(cell_index);
+    Node<SPACE_DIM>* p_this_node = p_cell_population->GetNode(node_index);
+
+    // Find the indices of the elements owned by this node
+    std::set<unsigned> containing_elem_indices = p_cell_population->GetNode(node_index)->rGetContainingElementIndices();
+
+    // Iterate over these elements
+    for (std::set<unsigned>::iterator iter = containing_elem_indices.begin();
+            iter != containing_elem_indices.end();
+            ++iter)
     {
-        pNodeA = pCellPopulation->GetNode(iter);
-        pNodeB = pCellPopulation->GetNode(iter);
-        // Find the indices of the elements owned by each node
-        std::set<unsigned> elements_containing_nodeA = pNodeA->rGetContainingElementIndices(); //look at the farhadifar force and the local index and node index stuff in line 136
-        std::set<unsigned> elements_containing_nodeB = pNodeB->rGetContainingElementIndices();
+        // Get this element, its index and its number of nodes
+        VertexElement<SPACE_DIM, SPACE_DIM>* p_element = p_cell_population->GetElement(*iter);
+        unsigned num_nodes_elem = p_element->GetNumNodes();
 
-        // Find common elements
-        std::set<unsigned> shared_elements;
-        std::set_intersection(elements_containing_nodeA.begin(),
-                              elements_containing_nodeA.end(),
-                              elements_containing_nodeB.begin(),
-                              elements_containing_nodeB.end(),
-                              std::inserter(shared_elements, shared_elements.begin()));
+        // Find the local index of this node in this element
+        unsigned local_index = p_element->GetNodeLocalIndex(node_index);
 
-        // Check that the nodes have a common edge
-        assert(!shared_elements.empty());
+        // Get the previous and next nodes in this element
+        unsigned previous_node_local_index = (num_nodes_elem+local_index-1)%num_nodes_elem;
+        Node<SPACE_DIM>* p_previous_node = p_element->GetNode(previous_node_local_index);
 
-        // Since each internal edge is visited twice in the loop above, we have to use half the line tension parameter
-        // for each visit.
-        double line_tension_parameter_in_calculation = GetLineTensionParameter()/2.0;
+        unsigned next_node_local_index = (local_index+1)%num_nodes_elem;
+        Node<SPACE_DIM>* p_next_node = p_element->GetNode(next_node_local_index);
 
-        // If the edge corresponds to a single element, then the cell is on the boundary
-        if (shared_elements.size() == 1)
-        {
-            line_tension_parameter_in_calculation = GetBoundaryLineTensionParameter();
-        }
+        // Compute the line tension parameter for each of these edges - be aware that this is half of the actual
+        // value for internal edges since we are looping over each of the internal edges twice
+        double previous_edge_line_tension_parameter = GetLineTensionParameter(p_previous_node, p_this_node, *p_cell_population);
+        double next_edge_line_tension_parameter = GetLineTensionParameter(p_this_node, p_next_node, *p_cell_population);
+
+        // Compute the gradient of each these edges, computed at the present node
+        c_vector<double, SPACE_DIM> previous_edge_gradient =
+                -p_cell_population->rGetMesh().GetNextEdgeGradientOfElementAtNode(p_element, previous_node_local_index);
+        c_vector<double, SPACE_DIM> next_edge_gradient = p_cell_population->rGetMesh().GetNextEdgeGradientOfElementAtNode(p_element, local_index);
+
+        // Add the force contribution from cell-cell and cell-boundary line tension (note the minus sign)
+        line_tension_contribution -= previous_edge_line_tension_parameter*previous_edge_gradient +
+                next_edge_line_tension_parameter*next_edge_gradient;
+
+
+        total_tension += (line_tension_contribution[0] + line_tension_contribution[1])/2.0;
+
     }
 
-    total_tension += line_tension_parameter_in_calculation;
-    return pCell->GetCellData()->SetItem("Line Tension", total_tension);}
+
+
+
+    return pCell->GetCellData()->SetItem("Cell Tension", total_tension);}
+
+
+template<unsigned SPACE_DIM>
+double FarhadifarForce<SPACE_DIM>::GetLineTensionParameter(Node<SPACE_DIM>* pNodeA, Node<SPACE_DIM>* pNodeB, VertexBasedCellPopulation<SPACE_DIM>& rVertexCellPopulation)
+{
+    // Find the indices of the elements owned by each node
+    std::set<unsigned> elements_containing_nodeA = pNodeA->rGetContainingElementIndices();
+    std::set<unsigned> elements_containing_nodeB = pNodeB->rGetContainingElementIndices();
+
+    // Find common elements
+    std::set<unsigned> shared_elements;
+    std::set_intersection(elements_containing_nodeA.begin(),
+                          elements_containing_nodeA.end(),
+                          elements_containing_nodeB.begin(),
+                          elements_containing_nodeB.end(),
+                          std::inserter(shared_elements, shared_elements.begin()));
+
+    // Check that the nodes have a common edge
+    assert(!shared_elements.empty());
+
+    // Since each internal edge is visited twice in the loop above, we have to use half the line tension parameter
+    // for each visit.
+    double line_tension_parameter_in_calculation = GetLineTensionParameter()/2.0;
+
+    // If the edge corresponds to a single element, then the cell is on the boundary
+    if (shared_elements.size() == 1)
+    {
+        line_tension_parameter_in_calculation = GetBoundaryLineTensionParameter();
+    }
+
+    return line_tension_parameter_in_calculation;
+}
+
+
+template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
+void CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::SetBoundaryLineTensionParameter(double BoundaryLineTensionParameter)
+{
+    mBoundaryLineTensionParameter = BoundaryLineTensionParameter;
+}
+
+template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
+void CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::SetLineTensionParameter(double lineTensionParameter)
+{
+    mLineTensionParameter = lineTensionParameter;
+}
+
+template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
+double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetLineTensionParameter()
+{
+    return mLineTensionParameter;
+}
+
+template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
+double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetBoundaryLineTensionParameter()
+{
+    return mBoundaryLineTensionParameter;
+}
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 void CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::VisitCell(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation)
 {
-    // Write location index corresponding to cell
-    *this->mpOutStream << pCellPopulation->GetLocationIndexUsingCell(pCell) << " ";
-
-    // Write cell location
-    c_vector<double, SPACE_DIM> cell_location = pCellPopulation->GetLocationOfCellCentre(pCell);
-    for (unsigned i=0; i<SPACE_DIM; i++)
-    {
-        *this->mpOutStream << cell_location[i] << " ";
-    }
-
-    // Write cell age
-    *this->mpOutStream << pCell->GetCellData()->SetItem("Line Tension", total_tension) << " ";
+    // Nothing to do
 }
 
 // Explicit instantiation

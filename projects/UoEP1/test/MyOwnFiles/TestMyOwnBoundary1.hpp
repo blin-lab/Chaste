@@ -1,40 +1,62 @@
+
 #include <cxxtest/TestSuite.h>
 #include "CheckpointArchiveTypes.hpp"
 #include "AbstractCellBasedTestSuite.hpp"
 
-#include "AbstractCellPopulationBoundaryCondition.hpp"
+#include "CellsGenerator.hpp"
 #include "OffLatticeSimulation.hpp"
-#include "HoneycombMeshGenerator.hpp"
+#include "DifferentiatedCellProliferativeType.hpp"
+#include "SmartPointers.hpp"
+
+#include "UniformG1GenerationalCellCycleModel.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "VertexBasedCellPopulation.hpp"
-#include "CellsGenerator.hpp"
-#include "FixedG1GenerationalCellCycleModel.hpp"
-#include "GeneralisedLinearSpringForce.hpp"
-#include "SmartPointers.hpp"
+#include "FarhadifarForce.hpp"
+#include "SimpleTargetAreaModifier.hpp"
+
+#include "PlaneBasedCellKiller.hpp"
+#include "CellLabel.hpp"
+#include "CircularBoundaryCondition.hpp"
+#include "RandomNumberGenerator.hpp"
+#include "CellLabelWriter.hpp"
 #include "FakePetscSetup.hpp"
 
-class MyBoundaryCondition : public AbstractCellPopulationBoundaryCondition<2>
+
+class TestMyOwnBoundary1 : public AbstractCellBasedTestSuite
 {
-private:
-
-    friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & archive, const unsigned int version)
-    {
-        archive & boost::serialization::base_object<AbstractCellPopulationBoundaryCondition<2> >(*this);
-    }
-
 public:
-    MyBoundaryCondition(AbstractCellPopulation<2>* pCellPopulation)
-            : AbstractCellPopulationBoundaryCondition<2>(pCellPopulation)
+    void TestMonolayer()
     {
+        HoneycombVertexMeshGenerator generator(2, 2);    // Parameters are: cells across, cells up
+        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
+
+        std::vector<CellPtr> cells;
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
+
+        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory("EclipseCircularBoundary");
+        simulator.SetEndTime(35.0);
+
+        simulator.SetSamplingTimestepMultiple(1);
+
+        MAKE_PTR(FarhadifarForce<2>, p_force);
+        simulator.AddForce(p_force);
+
+        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+        simulator.AddSimulationModifier(p_growth_modifier);
+
+        c_vector<double,2> centre = zero_vector<double>(2);
+        centre (0) = 2.0;
+        double radius = 10.0;
+
+        MAKE_PTR_ARGS(CircularBoundaryCondition<2>, p_bc, (&cell_population, centre, radius));
+        simulator.AddCellPopulationBoundaryCondition(p_bc);
+
+        simulator.Solve();
+
     }
-    void ImposeBoundaryCondition(const std::map<Node<2>*, c_vector<double, 2> >& rOldLocations)
-    {
-        for (AbstractCellPopulation<2>::Iterator cell_iter = this->mpCellPopulation->Begin();
-             cell_iter != this->mpCellPopulation->End();
-             ++cell_iter)
-    }
-
-
-
+};
