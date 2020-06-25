@@ -1,4 +1,4 @@
-/*
+
 #ifndef CELLLINETENSIONWRITER_HPP_
 #define CELLLINETENSIONWRITER_HPP_
 
@@ -14,7 +14,7 @@
  * The output file is called cellages.dat by default. If VTK is switched on,
  * then the writer also specifies the VTK output for each cell, which is stored
  * in the VTK cell data "Ages" by default.
- *//*
+ */
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 class CellLineTensionWriter : public AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>
@@ -27,7 +27,7 @@ private:
      *
      * @param archive the archive
      * @param version the current version of this class
-     *//*
+     */
 
     template<class Archive>
     void serialize(Archive & archive, const unsigned int version)
@@ -43,22 +43,22 @@ protected:
 
     /**
      * The strength of the area term in the model. Corresponds to K_alpha in Farhadifar's paper.
-     *//*
+     */
     double mAreaElasticityParameter;
 
     /**
      * The strength of the perimeter term in the model. Corresponds to Gamma_alpha in Farhadifar's paper.
-     *//*
+     */
     double mPerimeterContractilityParameter;
 
     /**
      * The strength of the line tension term in the model. Lambda_{i,j} in Farhadifar's paper.
-     *//*
+     */
     double mLineTensionParameter;
 
     /**
      * The strength of the line tension at the boundary. This term does correspond to Lambda_{i,j} in Farhadifar's paper.
-     *//*
+     */
     double mBoundaryLineTensionParameter;
 
 
@@ -66,7 +66,7 @@ public:
 
     /**
      * Default constructor.
-     *//*
+     */
     CellLineTensionWriter();
 
     /**
@@ -79,7 +79,7 @@ public:
      * @param pCellPopulation a pointer to the cell population owning the cell
      *
      * @return data associated with the cell
-     *//*
+     */
     double GetCellDataForVtkOutput(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation);
 
     /**
@@ -96,18 +96,21 @@ public:
      *
      * @param pCell a cell
      * @param pCellPopulation a pointer to the cell population owning the cell
-     *//*
+     */
     virtual void VisitCell(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation);
 
 
 
-    virtual void SetBoundaryLineTensionParameter(double BoundaryLineTensionParameter);
+    void SetBoundaryLineTensionParameter(double BoundaryLineTensionParameter);
 
-    virtual void SetLineTensionParameter(double lineTensionParameter);
+    void SetLineTensionParameter(double lineTensionParameter);
 
-    virtual double GetLineTensionParameter();
+    double GetLineTensionParameter();
 
-    virtual double GetBoundaryLineTensionParameter();
+    double GetBoundaryLineTensionParameter();
+
+    double GetLineTensionParameter(Node<SPACE_DIM> *pNodeA, Node<SPACE_DIM> *pNodeB,
+                                   VertexBasedCellPopulation<SPACE_DIM> &rVertexCellPopulation);
 
 
 };
@@ -115,5 +118,5 @@ public:
 #include "SerializationExportWrapper.hpp"
 EXPORT_TEMPLATE_CLASS_ALL_DIMS(CellLineTensionWriter)
 
-#endif /* CELLAGESWRITER_HPP_ */
+#endif /* CELLLINETENSIONWRITER_HPP_ */
 
