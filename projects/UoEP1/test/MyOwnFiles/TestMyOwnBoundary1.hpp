@@ -19,7 +19,9 @@
 #include "CircularBoundaryCondition.hpp"
 #include "RandomNumberGenerator.hpp"
 #include "CellLabelWriter.hpp"
+#include "CellLineTensionWriter.hpp"
 #include "FakePetscSetup.hpp"
+#include "Debug.hpp"
 
 
 class TestMyOwnBoundary1 : public AbstractCellBasedTestSuite
@@ -36,12 +38,13 @@ public:
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddCellWriter<CellLineTensionWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseCircularBoundary");
+        simulator.SetOutputDirectory("EclipseCircularTension");
         simulator.SetEndTime(35.0);
 
-        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetSamplingTimestepMultiple(50);
 
         MAKE_PTR(FarhadifarForce<2>, p_force);
         simulator.AddForce(p_force);
@@ -55,6 +58,7 @@ public:
 
         MAKE_PTR_ARGS(CircularBoundaryCondition<2>, p_bc, (&cell_population, centre, radius));
         simulator.AddCellPopulationBoundaryCondition(p_bc);
+
 
         simulator.Solve();
 

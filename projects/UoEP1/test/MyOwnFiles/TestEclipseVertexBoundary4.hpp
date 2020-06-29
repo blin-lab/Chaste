@@ -1,4 +1,3 @@
-
 #include <cxxtest/TestSuite.h>
 #include "CheckpointArchiveTypes.hpp"
 #include "AbstractCellBasedTestSuite.hpp"
@@ -20,7 +19,7 @@
 #include "PlaneBasedCellKiller.hpp"
 #include "CellLabel.hpp"
 #include "RandomNumberGenerator.hpp"
-#include "CellLabelWriter.hpp"
+#include "CellLineTensionWriter.hpp"
 #include "FakePetscSetup.hpp"
 
 class TestEclipseVertexBoundary4 : public AbstractCellBasedTestSuite
@@ -28,8 +27,8 @@ class TestEclipseVertexBoundary4 : public AbstractCellBasedTestSuite
 public:
     void TestMonolayer()
     {
-        HoneycombVertexMeshGenerator generator(6, 8);    // Parameters are: cells across, cells up
-        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
+        HoneycombVertexMeshGenerator generator(7, 7);    // Parameters are: cells across, cells up
+        MutableVertexMesh<2, 2> *p_mesh = generator.GetMesh();
 
         std::vector<CellPtr> cells;
         MAKE_PTR(TransitCellProliferativeType, p_transit_type);
@@ -37,40 +36,41 @@ public:
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddCellWriter<CellLineTensionWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseJiggleNodes");
-        simulator.SetEndTime(35.0);
+        simulator.SetOutputDirectory("EclipseTensionWriter1");
+        simulator.SetEndTime(10.0);
 
         simulator.SetSamplingTimestepMultiple(50);
 
         MAKE_PTR(FarhadifarForce<2>, p_force);
-        p_force->SetBoundaryLineTensionParameter(0.01);
+        p_force->SetBoundaryLineTensionParameter(0.12);
         simulator.AddForce(p_force);
 
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
 
-        c_vector<double,2> point = zero_vector<double>(2);
-	    c_vector<double,2> normal = zero_vector<double>(2);
+        c_vector<double, 2> point = zero_vector<double>(2);
+        c_vector<double, 2> normal = zero_vector<double>(2);
 
-	    normal(0) = -1.0;                                                                       //creates a normal to the plane at x = 0 with vector direction -1.
-	    MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));     //Vector -1 means that on the x plane it will go one unit towards the negative side.
-	    simulator.AddCellPopulationBoundaryCondition(p_bc1);
+        normal(0) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
+        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
+        simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
-	    point(0) = 10.0;                                                                        //Creates a normal to the plane where x = 10 is always true.
-	    normal(0) = 1.0;
-	    MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));     //Direction of the vector is one unit towards the positive side on the x plane.
-	    simulator.AddCellPopulationBoundaryCondition(p_bc2);
+        point(0) = 9.0;                                    //Creates a normal to the plane where x = 10 is always true.
+        normal(0) = 1.0;
+        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal)); //Direction of the vector is one unit towards the positive side on the x plane.
+        simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
-	    point(0) = 0.0;
-	    point(1) = 0.0;
-	    normal(0) = 0.0;
-	    normal(1) = -1.0;
-	    MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
-	    simulator.AddCellPopulationBoundaryCondition(p_bc3);
+        point(0) = 0.0;
+        point(1) = 0.0;
+        normal(0) = 0.0;
+        normal(1) = -1.0;
+        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
+        simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
-        point(1) = 10.0;
+        point(1) = 9.0;
         normal(1) = 1.0;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc4);
