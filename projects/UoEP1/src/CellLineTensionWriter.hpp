@@ -109,9 +109,6 @@ public:
 
     double GetBoundaryLineTensionParameter();
 
-    double GetLineTensionParameter(Node<SPACE_DIM> *pNodeA, Node<SPACE_DIM> *pNodeB,
-                                   VertexBasedCellPopulation<SPACE_DIM> &rVertexCellPopulation);
-
 
 };
 
