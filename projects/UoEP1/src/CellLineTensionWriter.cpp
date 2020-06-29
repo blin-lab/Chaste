@@ -58,7 +58,7 @@ double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetCellDataForVtkOutput(
 
             // Check that the nodes have a common edge
             if (shared_elements.empty())
-                continue;
+                continue; // if this is true when there is no commong edge between the element. If its true then for loops stops.
 
             double line_tension_parameter_in_calculation = GetLineTensionParameter();
 
@@ -79,7 +79,7 @@ double CellLineTensionWriter<ELEMENT_DIM, SPACE_DIM>::GetCellDataForVtkOutput(
             line_tension_contribution -= line_tension_parameter_in_calculation * edge_gradient;
 
             total_tension += (line_tension_contribution[0] + line_tension_contribution[1])/2;
-            edge_count++;
+            edge_count++; //edge_count should right now be equal to the (num_nodes ^ 2) - num_nodes.
         }
     }
 
