@@ -5,7 +5,8 @@
 #include "ChasteSerialization.hpp"
 #include <boost/serialization/base_object.hpp>
 #include "AbstractCellWriter.hpp"
-#include "FarhadifarForce.hpp"
+#include "VertexBasedCellPopulation.hpp"
+
 
 
 /**
@@ -99,7 +100,7 @@ public:
      */
     virtual void VisitCell(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation);
 
-
+    double GetLineTensionParameter(Node<SPACE_DIM>* pNodeA, Node<SPACE_DIM>* pNodeB, VertexBasedCellPopulation<SPACE_DIM>& rVertexCellPopulation);
 
     void SetBoundaryLineTensionParameter(double BoundaryLineTensionParameter);
 
