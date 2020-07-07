@@ -45,7 +45,7 @@ public:
         cell_population.AddCellWriter<CellLineTensionWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseTensionWriterTriangle");
+        simulator.SetOutputDirectory("EclipseTensionWriterDiamond");
         simulator.SetEndTime(200.0);
 
         simulator.SetSamplingTimestepMultiple(50);
