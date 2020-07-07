@@ -1,3 +1,10 @@
+/*
+ * TestEclipseVertexTensionInTriangleBoundary.hpp
+ *
+ *  Created on: 7 jul. 2020
+ *      Author: mirob
+ */
+
 #include <cxxtest/TestSuite.h>
 #include "CheckpointArchiveTypes.hpp"
 #include "AbstractCellBasedTestSuite.hpp"
@@ -21,7 +28,7 @@
 #include "CellLineTensionWriter.hpp"
 #include "FakePetscSetup.hpp"
 
-class TestEclipseVertexBoundary4 : public AbstractCellBasedTestSuite
+class TestEclipseVertexTensionInTriangleBoundary : public AbstractCellBasedTestSuite
 {
 public:
     void TestMonolayer()
@@ -53,21 +60,22 @@ public:
         c_vector<double, 2> point = zero_vector<double>(2);
         c_vector<double, 2> normal = zero_vector<double>(2);
 
-        normal (1) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
+        point (0) = 0.0;
+        normal (0) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
-        point (1) = 0.0;
-        point(0) = 0.0;                                    //Creates a normal to the plane where x = 10 is always true.
-        normal(1) = 0.0;
-        normal (0) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal)); //Direction of the vector is one unit towards the positive side on the x plane.
+        point(0) = 3.0;
+        normal(0) = 1.0;
+        point(1) = 0.0;
+        normal(1) = 1.0;
+        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
         point(0) = 0.0;
-        point(1) = 3.0;
-        normal(0) = 1.0;
-        normal(1) = 1.0;
+        point(1) = 0.0;
+        normal(0) = 0.0;
+        normal(1) = -1.0;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 

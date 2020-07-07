@@ -6,3 +6,6 @@ MyOwnFiles/TestEclipseVertexTensionModifier.hpp
 MyOwnFiles/TestEclipseVertexTensionModifier.hpp
 MyOwnFIles/TestTensionWriter.hpp
 MyOwnFiles/TestMyOwnBoundary1.hpp
+MyOwnFiles/TestEclipseVertexTensionInDiamondBoundary.hpp
+MyOwnFiles/TestEclipseVertexTensionInTriangleBoundary.hpp
+MyOwnFiles/TestEclipseVertexTensionInSquareBoundary.hpp
