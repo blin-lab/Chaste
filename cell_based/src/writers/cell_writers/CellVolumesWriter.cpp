@@ -31,17 +31,17 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-*/
+ */
 
 #include "CellVolumesWriter.hpp"
 #include "AbstractCellPopulation.hpp"
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 CellVolumesWriter<ELEMENT_DIM, SPACE_DIM>::CellVolumesWriter()
-    : AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>("cellareas.dat")
-{
-    this->mVtkCellDataName = "Cell volumes";
-}
+: AbstractCellWriter<ELEMENT_DIM, SPACE_DIM>("cellareas.dat")
+  {
+    this->mVtkCellDataName = "Cell areas";
+  }
 
 template<unsigned ELEMENT_DIM, unsigned SPACE_DIM>
 double CellVolumesWriter<ELEMENT_DIM, SPACE_DIM>::GetCellDataForVtkOutput(CellPtr pCell, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>* pCellPopulation)
@@ -57,6 +57,7 @@ void CellVolumesWriter<ELEMENT_DIM, SPACE_DIM>::VisitCell(CellPtr pCell, Abstrac
     unsigned cell_id = pCell->GetCellId();
     c_vector<double, SPACE_DIM> centre_location = pCellPopulation->GetLocationOfCellCentre(pCell);
     double volume = pCellPopulation->GetVolumeOfCell(pCell);
+
 
     if (volume < DBL_MAX)   // Only write cells with finite volume (avoids a case for boundary cells in MeshBasedCellPopulation)
     {

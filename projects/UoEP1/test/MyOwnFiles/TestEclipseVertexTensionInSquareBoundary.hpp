@@ -8,25 +8,30 @@
 #include "SmartPointers.hpp"
 
 #include "UniformG1GenerationalCellCycleModel.hpp"
+
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "VertexBasedCellPopulation.hpp"
+
+#include "CellLineTensionWriter.hpp"
+#include "NagaiHondaCellTensionWriter.hpp"
+
+/* This force law assumes that cells possess a "target area" property which determines the size of each
+ * cell in the simulation. In order to assign target areas to cells and update them in each time step, we need
+ * the next header file.*/
+
 #include "NagaiHondaForce.hpp"
-#include "FarhadifarForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 
 #include "PlaneBoundaryCondition.hpp"
-#include "PlaneBasedCellKiller.hpp"
-#include "CellLabel.hpp"
-#include "RandomNumberGenerator.hpp"
-#include "CellLineTensionWriter.hpp"
+
 #include "FakePetscSetup.hpp"
 
 class TestEclipseVertexTensionInSquareBoundary : public AbstractCellBasedTestSuite
 {
 public:
-    void TestMonolayer()
+    void TestMonolayer() //throw (Exception)
     {
-        HoneycombVertexMeshGenerator generator(2, 2);    // Parameters are: cells across, cells up
+        HoneycombVertexMeshGenerator generator(4, 4);    // Parameters are: cells across, cells up
         MutableVertexMesh<2, 2> *p_mesh = generator.GetMesh();
 
         std::vector<CellPtr> cells;
@@ -35,48 +40,63 @@ public:
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddCellWriter<CellLineTensionWriter>();
+        cell_population.AddCellWriter<NagaiHondaCellTensionWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseTensionWriterSquare");
-        simulator.SetEndTime(200.0);
+        simulator.SetOutputDirectory("EclipseTensionWriterSquareNagaiHondaForce2");
+        simulator.SetEndTime(40.0);
 
-        simulator.SetSamplingTimestepMultiple(50);
+        simulator.SetSamplingTimestepMultiple(100);
 
-        MAKE_PTR(FarhadifarForce<2>, p_force);
-        p_force->SetBoundaryLineTensionParameter(0.12);
+        /* We must now create one or more force laws, which determine the mechanics of the vertices
+         * of each cell in a cell population. For this test, we use one force law, based on the
+         * Nagai-Honda mechanics, and pass it to the {{{OffLatticeSimulation}}}.
+         * For a list of possible forces see subclasses of {{{AbstractForce}}}.
+         * These can be found in the inheritance diagram, here, [class:AbstractForce AbstractForce].
+         * Note that some of these forces are not compatible with vertex-based simulations see the specific class documentation for details,
+         * if you try to use an incompatible class then you will receive a warning.
+         */
+        MAKE_PTR(NagaiHondaForce<2>, p_force);
         simulator.AddForce(p_force);
 
+        /* A {{{NagaiHondaForce}}} assumes that each cell has a target area. The target areas of cells are used to determine pressure
+         * forces on each vertex and eventually determine the size of each cell in the simulation. In order to assign target areas to cells
+         * and update them in each time step we add a {{{SimpleTargetAreaModifier}}} to the simulation, which inherits from
+         *  {{{AbstractTargetAreaModifier}}}.
+         */
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
 
         c_vector<double, 2> point = zero_vector<double>(2);
         c_vector<double, 2> normal = zero_vector<double>(2);
 
-        point (0) = 0.0;
         normal (0) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
         point(0) = 0.0;
         normal(0) = 0.0;
-        point (1) = 3.0;
+        point (1) = 10.0;
         normal (1) = 1.0;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal)); //Direction of the vector is one unit towards the positive side on the x plane.
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
-        point(0) = 3.0;
+        point(0) = 10.0;
         normal(0) = 1.0;
         point(1) = 0.0;
         normal(1) = 0.0;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
+        point (0) = 0.0;
+        normal (0) = 0.0;
         normal (1) = -1.0;
         point (1) = 0.0;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
+        simulator.AddCellPopulationBoundaryCondition(p_bc4);
 
         simulator.Solve();
+
 
     }
 };

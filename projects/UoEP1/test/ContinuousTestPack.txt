@@ -9,3 +9,5 @@ MyOwnFiles/TestMyOwnBoundary1.hpp
 MyOwnFiles/TestEclipseVertexTensionInDiamondBoundary.hpp
 MyOwnFiles/TestEclipseVertexTensionInTriangleBoundary.hpp
 MyOwnFiles/TestEclipseVertexTensionInSquareBoundary.hpp
+MyOwnFiles/TestEclipseVertexTensionInUnevenTriangleBoundary.hpp
+MyOwnFiles/TestEclipseTensionInOctagonBoundary.hpp
