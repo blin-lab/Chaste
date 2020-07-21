@@ -1,10 +1,9 @@
 /*
- * TestEclipseVertexTensionInDiamondBoundary.hpp
+ * TestEclipseVertexTensionInTriangleBoundary.hpp
  *
  *  Created on: 7 jul. 2020
  *      Author: mirob
  */
-
 #include <cxxtest/TestSuite.h>
 #include "CheckpointArchiveTypes.hpp"
 #include "AbstractCellBasedTestSuite.hpp"
@@ -36,7 +35,7 @@
 
 #include "FakePetscSetup.hpp"
 
-class TestEclipseVertexTensionInDiamondBoundary : public AbstractCellBasedTestSuite
+class TestEclipseVertexTensionInUnevenTriangleBoundary : public AbstractCellBasedTestSuite
 {
 public:
     void TestMonolayer()
@@ -55,10 +54,10 @@ public:
         cell_population.AddCellWriter<CellProliferativePhasesWriter>();
         cell_population.AddCellWriter<CellProliferativeTypesWriter>();
 
-        OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterDiamond1");
-        simulator.SetEndTime(35.0);
 
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterEquilateralTriangle");
+        simulator.SetEndTime(35.0);
         simulator.SetSamplingTimestepMultiple(50);
 
         /* We must now create one or more force laws, which determine the mechanics of the vertices
@@ -78,35 +77,29 @@ public:
         c_vector<double, 2> point = zero_vector<double>(2);
         c_vector<double, 2> normal = zero_vector<double>(2);
 
-        point(0) = -3.3;
-        normal(0) = -1.0;
+        point(0) = 0.0;
         point(1) = 0.0;
-        normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));
+        normal (0) = 0.0;
+        normal (1) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
+        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
-        point(0) = -3.3;
-        normal(0) = -1.0;
+        point(0) = 4.0;
+        normal(0) = 0.866;
         point(1) = 0.0;
-        normal(1) = 1.0;
+        normal(1) = 0.5;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
-        point(0) = 3.3;
-        normal(0) = 1.0;
+        point(0) = -3.0;
+        normal(0) = -0.866;
         point(1) = 0.0;
-        normal(1) = -1.0;
+        normal(1) = 0.5;
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
-        point(0) = 3.3;
-        normal(0) = 1.0;
-        point(1) = 0.0;
-        normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
-        simulator.AddCellPopulationBoundaryCondition(p_bc4);
         simulator.Solve();
+
 
     }
 };
-
