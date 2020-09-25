@@ -31,7 +31,7 @@
 #include "CellProliferativePhasesWriter.hpp"
 #include "CellProliferativeTypesWriter.hpp"
 
-#include "PlaneBoundaryCondition.hpp"
+#include "PlaneStickyBoundaryCondition.hpp"
 
 #include "FakePetscSetup.hpp"
 
@@ -56,8 +56,8 @@ public:
 
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterEquilateralTriangle");
-        simulator.SetEndTime(35.0);
+        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterEquilateralTriangleActiveBoundary");
+        simulator.SetEndTime(32.0);
         simulator.SetSamplingTimestepMultiple(50);
 
         /* We must now create one or more force laws, which determine the mechanics of the vertices
@@ -81,21 +81,21 @@ public:
         point(1) = 0.0;
         normal (0) = 0.0;
         normal (1) = -1.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
         point(0) = 4.0;
         normal(0) = 0.866;
         point(1) = 0.0;
         normal(1) = 0.5;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
         point(0) = -3.0;
         normal(0) = -0.866;
         point(1) = 0.0;
         normal(1) = 0.5;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
         simulator.Solve();

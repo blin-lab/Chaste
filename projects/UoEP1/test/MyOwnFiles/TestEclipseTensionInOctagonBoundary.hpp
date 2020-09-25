@@ -60,7 +60,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CellProliferativePhasesWriter.hpp"
 #include "CellProliferativeTypesWriter.hpp"
 
-#include "PlaneBoundaryCondition.hpp"
+#include "PlaneStickyBoundaryCondition.hpp"
 
 #include "FakePetscSetup.hpp"
 
@@ -84,8 +84,8 @@ public:
         cell_population.AddCellWriter<CellProliferativeTypesWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterOctagon1");
-        simulator.SetEndTime(35.0);
+        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterOctagonActiveBoundary");
+        simulator.SetEndTime(31.0);
 
         simulator.SetSamplingTimestepMultiple(50);
 
@@ -119,85 +119,92 @@ public:
         /* Square Point A lies at (0 , 0).
          * Bottom Boundary is parallel to x axis and going negative. So that the cells populate the positive part.
          */
+
         point(0) = 0.0;
         point(1) = 0.0;
         normal(0) = 0.0;
         normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
         /* Square Point B lies at (-1.5 , 0).
          * Left Boundary is parallel to y axis at x = -1.5 always. And going negative.
          */
+
         point(0) = -1.5;
         point(1) = 0.0;
         normal(0) = -1.0;
         normal(1) = 0.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
         /* Square Point C lies at (0 , 5).
          * Top Boundary is parallel y = 5.0 always. And it goes upwards so positive. Cell populate the down part of boundary.
          */
+
         point(0) = 0.0;
         point(1) = 5.0;
         normal(0) = 0.0;
         normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
         /* Square Point D lies at (3.6 , 0).
-         * Right Boundary is parallel to y axis at x = -1.5 always. Cells populate to left of boundary. .
+         * Right Boundary is parallel to y axis at x = -1.5 always. Cells populate to left of boundary.
          */
+
         point (0) = 3.6;
         point (1) = 0.0;
         normal (0) = 1.0;
         normal (1) = 0.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc4);
 
         /* Diamond Point A lies at (-1.5 , 1.5).
-         * Bottom left boundary of octagon.
+         * Bottom left boundary of octagon
          */
+
         point(0) = -1.5;
         point(1) = 1.5;
         normal(0) = -1.0;
         normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc5, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc5, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc5);
 
         /* Diamond Point B lies at (-1.5 , 3.6).
          * Top-Left boundary of octagon.
          */
+
         point(0) = -1.5;
         point(1) = 3.6;
         normal(0) = -1.0;
         normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc6, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc6, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc6);
 
         /* Diamond Point C lies at (3.6 , 3.5).
          * Top-Right boundary of octagon.
          */
+
         point(0) = 3.6;
         point(1) = 3.5;
         normal(0) = 1.0;
         normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc7, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc7, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc7);
 
         /* Diamond Point B lies at (3.6, 1.5).
          * Bottom-Right boundary of octagon.
          */
+
         point(0) = 3.6;
         point(1) = 1.5;
         normal(0) = 1.0;
         normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc8, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc8, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc8);
 
         simulator.Solve();
-
 
     }
 };

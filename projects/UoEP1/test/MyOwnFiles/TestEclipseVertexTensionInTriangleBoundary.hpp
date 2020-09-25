@@ -27,9 +27,11 @@
 
 #include "NagaiHondaForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
-#include "VolumeTrackingModifier.hpp"
+#include "CellVolumesWriter.hpp"
+#include "CellProliferativePhasesWriter.hpp"
+#include "CellProliferativeTypesWriter.hpp"
 
-#include "PlaneBoundaryCondition.hpp"
+#include "PlaneStickyBoundaryCondition.hpp"
 
 #include "FakePetscSetup.hpp"
 
@@ -38,7 +40,7 @@ class TestEclipseVertexTensionInTriangleBoundary : public AbstractCellBasedTestS
 public:
     void TestMonolayer()
     {
-        HoneycombVertexMeshGenerator generator(1, 1);    // Parameters are: cells across, cells up
+        HoneycombVertexMeshGenerator generator(2, 2);    // Parameters are: cells across, cells up
         MutableVertexMesh<2, 2> *p_mesh = generator.GetMesh();
 
         std::vector<CellPtr> cells;
@@ -48,13 +50,14 @@ public:
 
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<NagaiHondaCellTensionWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellProliferativePhasesWriter>();
+        cell_population.AddCellWriter<CellProliferativeTypesWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterUnevenTriangleTrying");
-        simulator.SetEndTime(30.0);
-        simulator.SetSamplingTimestepMultiple(100);
-
-
+        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterRightAngleTriangleActiveBoundary");
+        simulator.SetEndTime(35.0);
+        simulator.SetSamplingTimestepMultiple(50);
 
         /* We must now create one or more force laws, which determine the mechanics of the vertices
          * of each cell in a cell population. For this test, we use one force law, based on the
@@ -73,36 +76,26 @@ public:
         c_vector<double, 2> point = zero_vector<double>(2);
         c_vector<double, 2> normal = zero_vector<double>(2);
 
-        //Make a boundary so that it creates a triangle with coordinates (6 ,6) , (-3, 0) and (3, 0). The area of the triangle is of 18.97u^2 so rounded to 19.
-        // Impose a wall at y = 0 so that y < 0 is left out of boundary
-        point(0) = -2.0;
+        point(0) = 0.0;
         normal(0) = -1.0;
         point(1) = 0.0;
-        normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));
+        normal(1) = 0.0;
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc1, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
-        point(0) = -2.0;
-        normal(0) = -1.0;
-        point(1) = 0.0;
-        normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
-        simulator.AddCellPopulationBoundaryCondition(p_bc2);
-
-        point(0) = 3.0;
-        normal(0) = 1.0;
+        point(0) = 0.0;
+        normal(0) = 0.0;
         point(1) = 0.0;
         normal(1) = -1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
-        simulator.AddCellPopulationBoundaryCondition(p_bc3);
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
+        simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
-        point(0) = 3.0;
+        point(0) = 6.6;
         normal(0) = 1.0;
         point(1) = 0.0;
         normal(1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
-        simulator.AddCellPopulationBoundaryCondition(p_bc4);
-        simulator.Solve();
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
+        simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
         simulator.Solve();
 

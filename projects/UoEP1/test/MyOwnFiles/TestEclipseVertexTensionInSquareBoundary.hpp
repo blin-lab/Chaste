@@ -18,14 +18,14 @@
 /* This force law assumes that cells possess a "target area" property which determines the size of each
  * cell in the simulation. In order to assign target areas to cells and update them in each time step, we need
  * the next header file.*/
-
+#include "FarhadifarForce.hpp"
 #include "NagaiHondaForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 #include "CellVolumesWriter.hpp"
 #include "CellProliferativePhasesWriter.hpp"
 #include "CellProliferativeTypesWriter.hpp"
 
-#include "PlaneBoundaryCondition.hpp"
+#include "PlaneStickyBoundaryCondition.hpp"
 
 #include "FakePetscSetup.hpp"
 
@@ -43,14 +43,14 @@ public:
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddCellWriter<NagaiHondaCellTensionWriter>();
+
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellProliferativePhasesWriter>();
         cell_population.AddCellWriter<CellProliferativeTypesWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("EclipseNagaiHondaTensionWriterSquare");
-        simulator.SetEndTime(35.0);
+        simulator.SetOutputDirectory("EclipseNagaiHondaForceBehaviousSimulationWithTension");
+        simulator.SetEndTime(50.0);
 
         simulator.SetSamplingTimestepMultiple(50);
 
@@ -73,6 +73,7 @@ public:
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
 
+        /*
         c_vector<double, 2> point = zero_vector<double>(2);
         c_vector<double, 2> normal = zero_vector<double>(2);
 
@@ -80,29 +81,29 @@ public:
         point(1) = 0.0;
         normal (0) = -1.0;
         normal (1) = 0.0;                             //creates a normal to the plane at x = 0 with vector direction -1.
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc1, (&cell_population, point, normal)); //Vector -1 means that on the x plane it will go one unit towards the negative side.
         simulator.AddCellPopulationBoundaryCondition(p_bc1);
 
         point(0) = 0.0;
         normal(0) = 0.0;
         point (1) = 4.5;
         normal (1) = 1.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc2, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc2);
 
         point(0) = 4.5;
         normal(0) = 1.0;
         point(1) = 0.0;
         normal(1) = 0.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc3, (&cell_population, point, normal));
         simulator.AddCellPopulationBoundaryCondition(p_bc3);
 
         point (0) = 0.0;
         normal (0) = 0.0;
         normal (1) = -1.0;
         point (1) = 0.0;
-        MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
-        simulator.AddCellPopulationBoundaryCondition(p_bc4);
+        MAKE_PTR_ARGS(PlaneStickyBoundaryCondition<2>, p_bc4, (&cell_population, point, normal));
+        simulator.AddCellPopulationBoundaryCondition(p_bc4);*/
 
         simulator.Solve();
 
